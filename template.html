@@ -384,9 +384,9 @@ function bindSpark(el) {
 render();
 
 /* ---------- Einfache Ansicht: Signale + Meine Trades ---------- */
-const RULES = { edge: 0.05, minN: 300, maxKO: 0.10, sellLoss: 0.5 };
+const RULES = Object.assign({ edge: 0.05, minN: 300, maxKO: 0.10, sellLoss: 0.5, leverage: 5 }, DATA.rules || {});
 const SH = String(DATA.horizons[0]);           // Haltedauer der einfachen Ansicht (3 Tage)
-const S2 = { L: String(DATA.leverages[1] ?? DATA.leverages[0]) };
+const S2 = { L: String(RULES.leverage) };
 const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const todayIso = () => iso(new Date());

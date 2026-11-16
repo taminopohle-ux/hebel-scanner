@@ -268,6 +268,7 @@ def main():
         "horizons": HORIZONS,
         "leverages": LEVERAGES,
         "pool_n": int(len(pool)),
+        "rules": CFG.get("signal_rules"),
         "market": mkt,
         "rows": rows,
     }

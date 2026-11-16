@@ -3,6 +3,8 @@
   "horizons": [3, 5],
   "leverages": [2, 5, 10],
   "min_sample": 150,
+  "signal_rules": { "edge": 0.05, "minN": 300, "maxKO": 0.10, "sellLoss": 0.5, "leverage": 5 },
+  "page_url": "https://taminopohle-ux.github.io/hebel-scanner/",
   "tickers": {
     "AAPL": "Apple",
     "MSFT": "Microsoft",

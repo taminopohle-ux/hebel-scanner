@@ -28,6 +28,11 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - run: python scanner.py
+      - name: Push-Nachricht senden (ntfy)
+        if: github.event_name == 'schedule'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python notify.py || echo "Benachrichtigung fehlgeschlagen"
       - name: Tages-Scan archivieren (hält den Zeitplan aktiv)
         run: |
           git config user.name "github-actions[bot]"
