@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hebel-Scanner</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f4f4f2; --surface:#fcfcfb; --surface-2:#efeeeb; --line:#e2e1dc;
+  --text:#0b0b0b; --text-2:#52514e; --muted:#8a8984;
+  --up:#008300; --up-soft:rgba(0,131,0,.14);
+  --down:#d03b3a; --down-soft:rgba(227,73,72,.15);
+  --accent:#2a78d6; --warn:#b07400; --warn-soft:rgba(237,161,0,.16);
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme:dark;
+    --bg:#111110; --surface:#1a1a19; --surface-2:#232321; --line:#2f2f2c;
+    --text:#f0efec; --text-2:#c3c2b7; --muted:#8d8c85;
+    --up:#2fb52f; --up-soft:rgba(12,163,12,.2);
+    --down:#e66767; --down-soft:rgba(230,103,103,.18);
+    --accent:#3987e5; --warn:#e0a020; --warn-soft:rgba(201,133,0,.22);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111110; --surface:#1a1a19; --surface-2:#232321; --line:#2f2f2c;
+  --text:#f0efec; --text-2:#c3c2b7; --muted:#8d8c85;
+  --up:#2fb52f; --up-soft:rgba(12,163,12,.2);
+  --down:#e66767; --down-soft:rgba(230,103,103,.18);
+  --accent:#3987e5; --warn:#e0a020; --warn-soft:rgba(201,133,0,.22);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em}
+.sub{color:var(--text-2);font-size:13px}
+.disclaimer{background:var(--warn-soft);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--text);margin-bottom:16px}
+.disclaimer b{font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:18px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tile .lbl{font-size:12px;color:var(--text-2)}
+.tile .val{font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .chg{font-size:12px;font-variant-numeric:tabular-nums}
+.controls{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px;position:sticky;top:0;z-index:5}
+.ctl{display:flex;align-items:center;gap:8px}
+.ctl>span{font-size:12px;color:var(--text-2)}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:8px;padding:2px}
+.seg button{border:0;background:transparent;color:var(--text-2);font:inherit;font-size:13px;padding:4px 10px;border-radius:6px;cursor:pointer}
+.seg button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.12);font-weight:600}
+input[type=search]{font:inherit;font-size:13px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--text);width:160px}
+label.chk{font-size:13px;color:var(--text-2);display:flex;gap:6px;align-items:center;cursor:pointer}
+.tablebox{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:1050px}
+th,td{padding:9px 10px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{font-size:11.5px;font-weight:600;color:var(--text-2);text-transform:none;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;position:relative;vertical-align:bottom}
+th:hover{color:var(--text)}
+th.sorted::after{content:attr(data-dir);margin-left:3px;color:var(--accent)}
+th small{display:block;font-weight:400;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+tbody tr.main{border-top:1px solid var(--line);cursor:pointer}
+tbody tr.main:hover{background:var(--surface-2)}
+tbody tr.main.open{background:var(--surface-2)}
+.tk{font-weight:600}
+.nm{color:var(--text-2);font-size:12px;display:block}
+.pos{color:var(--up)} .neg{color:var(--down)}
+.pill{display:inline-block;font-size:11.5px;padding:2px 7px;border-radius:999px;background:var(--surface-2);color:var(--text-2)}
+.pill.up{background:var(--up-soft);color:var(--up)} .pill.down{background:var(--down-soft);color:var(--down)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pbar{display:inline-flex;align-items:center;gap:6px;justify-content:flex-end}
+.pbar .track{width:56px;height:6px;border-radius:3px;background:var(--surface-2);position:relative;overflow:hidden}
+.pbar .track i{position:absolute;top:0;bottom:0;border-radius:3px}
+.pbar .track b{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--muted)}
+.delta{font-size:11px;color:var(--muted);display:block}
+tr.detail td{padding:0;text-align:left;white-space:normal;background:var(--surface-2)}
+.det{display:grid;grid-template-columns:minmax(280px,1.2fr) 1fr 1fr;gap:18px;padding:16px 18px 20px}
+.det h4{margin:0 0 8px;font-size:12px;color:var(--text-2);font-weight:600}
+.det .card{background:var(--surface);border-radius:10px;padding:12px 14px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.kv span:nth-child(odd){color:var(--text-2)}
+.kv span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums}
+.levt{width:100%;min-width:0;font-size:13px}
+.levt th,.levt td{padding:5px 6px;cursor:default}
+.news a{color:var(--text);text-decoration:none;display:block;margin-bottom:8px;font-size:13px}
+.news a:hover{color:var(--accent)}
+.news small{color:var(--muted);display:block;font-size:11.5px}
+.spark{position:relative}
+.spark svg{display:block;width:100%;height:120px}
+.tip{position:absolute;pointer-events:none;background:var(--text);color:var(--surface);font-size:12px;padding:4px 8px;border-radius:6px;transform:translate(-50%,-120%);white-space:nowrap;display:none}
+.method{margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 20px;font-size:13.5px;color:var(--text-2)}
+.method h3{color:var(--text);font-size:15px;margin:0 0 8px}
+.method li{margin-bottom:5px}
+.method b{color:var(--text);font-weight:600}
+@media (max-width:860px){.det{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Hebel-Scanner</h1>
+      <div class="sub" id="stamp"></div>
+    </div>
+    <div class="sub">Für Knock-outs/Turbos (z.&nbsp;B. über Scalable Capital / gettex)</div>
+  </header>
+
+  <div class="disclaimer"><b>Keine Empfehlung.</b> Die Werte zeigen, wie sich Aktien in der Vergangenheit nach <i>ähnlichen</i> Situationen entwickelt haben. Das ist keine Prognose. Gebühren, Spreads und Finanzierungskosten der Hebelprodukte sind nicht enthalten. Bei Hebelprodukten ist ein Totalverlust in wenigen Stunden möglich.</div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="controls">
+    <div class="ctl"><span>Haltedauer</span><div class="seg" id="segH"></div></div>
+    <div class="ctl"><span>Hebel</span><div class="seg" id="segL"></div></div>
+    <div class="ctl"><span>Richtung</span><div class="seg" id="segD"><button data-v="long">Long (Call)</button><button data-v="short">Short (Put)</button></div></div>
+    <div class="ctl"><input type="search" id="q" placeholder="Aktie suchen …"></div>
+    <label class="chk"><input type="checkbox" id="onlyEvt"> nur mit Vorfall</label>
+    <label class="chk"><input type="checkbox" id="hideEarn"> Zahlen im Zeitraum ausblenden</label>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr id="thead"></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="method">
+    <h3>So entstehen die Zahlen</h3>
+    <ul>
+      <li><b>Setup:</b> Jede Aktie wird heute eingeordnet nach Trend (Kurs vs. 20- und 50-Tage-Linie), RSI-Zone und „Vorfall“ (gestrige Bewegung größer als 2 Standardabweichungen, oft durch Nachrichten).</li>
+      <li><b>Vergleichsfälle:</b> Aus 3 Jahren Daten aller Aktien der Liste werden alle Tage mit dem gleichen Setup gesucht (Spalte <b>n</b>). Deren Kursverläufe der folgenden 3 bzw. 5 Tage werden auf die aktuelle Schwankungsbreite der Aktie skaliert.</li>
+      <li><b>P(steigt):</b> Anteil der Vergleichsfälle, in denen der Kurs nach der Haltedauer höher war. Die kleine Zahl darunter zeigt die Abweichung zur Basisrate (alle Tage, egal welches Setup). Abweichungen von wenigen Prozentpunkten sind meist Rauschen.</li>
+      <li><b>P(Knock-out):</b> Anteil der Fälle, in denen das Tagestief (Long) bzw. Tageshoch (Short) die Knock-out-Schwelle berührt hätte. Vereinfachung: Schwelle ≈ Einstieg ± 1/Hebel (Hebel 5 → 20&nbsp;% Abstand), ohne Aufgeld und Finanzierung.</li>
+      <li><b>P(Gewinn):</b> kein Knock-out <i>und</i> Kurs am Ende in der gewünschten Richtung. <b>Ø Ergebnis:</b> durchschnittliches Hebelergebnis aller Vergleichsfälle (Knock-out = −100&nbsp;%). Ein negativer Wert heißt: historisch im Schnitt verloren.</li>
+      <li><b>Achtung Verzerrung:</b> Die letzten 3 Jahre waren überwiegend ein steigender Markt. Darum liegt die Basisrate für „steigt“ über 50&nbsp;% und Long-Ergebnisse wirken historisch besser als Short. Das muss sich nicht fortsetzen.</li>
+      <li><b>Zahlen-Termin im Zeitraum:</b> Quartalszahlen erzeugen Kurssprünge, die in den Basisraten kaum stecken. Das Risiko ist dann deutlich höher als angezeigt.</li>
+      <li>Datenquelle: Yahoo Finance (Schlusskurse, verzögert). Die Seite wird werktags automatisch neu erzeugt.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const S = { H: String(DATA.horizons[0]), L: String(DATA.leverages[1] ?? DATA.leverages[0]), D: "long", sort: "edge", dir: -1, open: new Set() };
+const $ = s => document.querySelector(s);
+const pct = (x, d = 0, sign = false) => x == null || isNaN(x) ? "–" : (sign && x > 0 ? "+" : "") + (x * 100).toFixed(d).replace(".", ",") + " %";
+const num = (x, d = 2) => x == null ? "–" : x.toLocaleString("de-DE", { minimumFractionDigits: d, maximumFractionDigits: d });
+const cls = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+$("#stamp").textContent = `Kursstand ${fmtDate(DATA.data_date)} · erzeugt ${DATA.generated} · ${DATA.pool_n.toLocaleString("de-DE")} historische Vergleichstage`;
+function fmtDate(d) { const [y, m, t] = d.split("-"); return `${t}.${m}.${y}`; }
+function daysUntil(d) { if (!d) return null; return Math.round((new Date(d) - new Date(DATA.data_date)) / 864e5); }
+
+// Market tiles
+$("#tiles").innerHTML = DATA.market.map(m => `
+  <div class="tile"><div><div class="lbl">${esc(m.name)}</div>
+  <div class="val">${num(m.last, m.ticker === "^VIX" ? 1 : 0)}</div>
+  <div class="chg"><span class="${cls(m.chg1d)}">${pct(m.chg1d, 1, true)}</span> heute · <span class="${cls(m.chg5d)}">${pct(m.chg5d, 1, true)}</span> 5T</div></div>
+  ${miniSpark(m.spark, m.ticker === "^VIX" ? "var(--warn)" : (m.chg5d >= 0 ? "var(--up)" : "var(--down)"))}</div>`).join("");
+function miniSpark(v, color) {
+  const w = 80, h = 32, mn = Math.min(...v), mx = Math.max(...v);
+  const p = v.map((y, i) => `${(i / (v.length - 1) * w).toFixed(1)},${(h - 2 - (y - mn) / (mx - mn || 1) * (h - 4)).toFixed(1)}`).join(" ");
+  return `<svg width="${w}" height="${h}" aria-hidden="true"><polyline points="${p}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+
+// Segmented controls
+function seg(el, vals, key, fmt) {
+  el.innerHTML = vals.map(v => `<button data-v="${v}">${fmt(v)}</button>`).join("");
+  bindSeg(el, key);
+}
+function bindSeg(el, key) {
+  el.querySelectorAll("button").forEach(b => {
+    b.classList.toggle("on", b.dataset.v === S[key]);
+    b.onclick = () => { S[key] = b.dataset.v; el.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); render(); };
+  });
+}
+seg($("#segH"), DATA.horizons.map(String), "H", v => `${v} Tage`);
+seg($("#segL"), DATA.leverages.map(String), "L", v => `${v}x`);
+bindSeg($("#segD"), "D");
+["#q", "#onlyEvt", "#hideEarn"].forEach(s => $(s).addEventListener("input", render));
+
+const COLS = [
+  { k: "ticker", t: "Aktie", v: r => r.name },
+  { k: "price", t: "Kurs", v: r => r.price },
+  { k: "chg1d", t: "Heute", v: r => r.chg1d },
+  { k: "chg5d", t: "5 Tage", v: r => r.chg5d },
+  { k: "trend", t: "Trend", v: r => r.trend },
+  { k: "rsi", t: "RSI", v: r => r.rsi },
+  { k: "event", t: "Vorfall", v: r => Math.abs(r.z) },
+  { k: "p_up", t: "P(steigt)", s: "Δ zur Basis", v: r => h(r).p_up },
+  { k: "edge", t: "Signal-Abweichung", s: "|Δ P(steigt)|", v: r => Math.abs(h(r).p_up - b(r).p_up) },
+  { k: "p_big", t: "P(±5 %)", s: "auf / ab", v: r => S.D === "long" ? h(r).p_up5 : h(r).p_dn5 },
+  { k: "ko", t: "P(Knock-out)", s: () => `${S.L}x ${S.D === "long" ? "Long" : "Short"}`, v: r => lev(r).ko },
+  { k: "win", t: "P(Gewinn)", s: () => `${S.L}x, ohne KO`, v: r => lev(r).win },
+  { k: "ev", t: "Ø Ergebnis", s: () => `${S.L}x, historisch`, v: r => lev(r).ev },
+  { k: "n", t: "n", s: "Fälle", v: r => r.n },
+  { k: "earn", t: "Zahlen", v: r => daysUntil(r.earnings) ?? 999 },
+];
+const h = r => r.h[S.H], b = r => r.base[S.H], lev = r => r.h[S.H].lev[S.L][S.D];
+
+function header() {
+  $("#thead").innerHTML = COLS.map(c => `<th data-k="${c.k}" class="${S.sort === c.k ? "sorted" : ""}" data-dir="${S.dir < 0 ? "↓" : "↑"}">${c.t}${c.s ? `<small>${typeof c.s === "function" ? c.s() : c.s}</small>` : ""}</th>`).join("");
+  $("#thead").querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k; if (S.sort === k) S.dir *= -1; else { S.sort = k; S.dir = k === "ticker" || k === "ko" || k === "earn" ? 1 : -1; } render();
+  });
+}
+
+function pbar(p, base) {
+  const d = p - base, w = Math.min(Math.abs(p - .5) * 2, 1) * 50;
+  const col = p >= .5 ? "var(--up)" : "var(--down)";
+  const left = p >= .5 ? 50 : 50 - w;
+  return `<div class="pbar"><span><b>${pct(p)}</b><span class="delta">${d >= 0 ? "+" : "−"}${Math.abs(d * 100).toFixed(1).replace(".", ",")} Pp</span></span>
+    <span class="track" aria-hidden="true"><i style="left:${left}%;width:${w}%;background:${col}"></i><b></b></span></div>`;
+}
+
+function render() {
+  header();
+  const q = $("#q").value.trim().toLowerCase();
+  const H = +S.H;
+  let rows = DATA.rows.filter(r => !q || r.ticker.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+  if ($("#onlyEvt").checked) rows = rows.filter(r => r.event !== 0);
+  if ($("#hideEarn").checked) rows = rows.filter(r => { const d = daysUntil(r.earnings); return d == null || d < 0 || d > H + 2; });
+  const col = COLS.find(c => c.k === S.sort);
+  rows.sort((a, b) => { const x = col.v(a), y = col.v(b); return (typeof x === "string" ? x.localeCompare(y) : x - y) * S.dir; });
+
+  $("#tbody").innerHTML = rows.map(r => {
+    const H_ = h(r), L_ = lev(r), dE = daysUntil(r.earnings);
+    const earnSoon = dE != null && dE >= 0 && dE <= H + 2;
+    const tr = r.trend === 1 ? `<span class="pill up">▲ auf</span>` : r.trend === -1 ? `<span class="pill down">▼ ab</span>` : `<span class="pill">◆ seitw.</span>`;
+    const ev = r.event === 1 ? `<span class="pill up">Sprung ${num(r.z, 1)}σ</span>` : r.event === -1 ? `<span class="pill down">Absturz ${num(r.z, 1)}σ</span>` : `<span class="nm">–</span>`;
+    const rsiTxt = r.rsi < 30 ? "pill down" : r.rsi > 70 ? "pill up" : "";
+    const big = S.D === "long" ? H_.p_up5 : H_.p_dn5;
+    const open = S.open.has(r.ticker);
+    return `<tr class="main${open ? " open" : ""}" data-t="${esc(r.ticker)}">
+      <td><span class="tk">${esc(r.name)}</span><span class="nm">${esc(r.ticker)}</span></td>
+      <td>${num(r.price)} <span class="nm">${r.currency}</span></td>
+      <td class="${cls(r.chg1d)}">${pct(r.chg1d, 1, true)}</td>
+      <td class="${cls(r.chg5d)}">${pct(r.chg5d, 1, true)}</td>
+      <td>${tr}</td>
+      <td><span class="${rsiTxt}">${num(r.rsi, 0)}</span></td>
+      <td>${ev}</td>
+      <td>${pbar(H_.p_up, b(r).p_up)}</td>
+      <td>${(Math.abs(H_.p_up - b(r).p_up) * 100).toFixed(1).replace(".", ",")} Pp</td>
+      <td>${pct(big)}</td>
+      <td class="${L_.ko > .25 ? "neg" : ""}">${pct(L_.ko)}</td>
+      <td>${pct(L_.win)}</td>
+      <td class="${cls(L_.ev)}">${pct(L_.ev, 1, true)}</td>
+      <td class="nm">${r.n.toLocaleString("de-DE")}</td>
+      <td>${earnSoon ? `<span class="pill warn">⚠ in ${dE} T</span>` : r.earnings && dE >= 0 ? `<span class="nm">${fmtDate(r.earnings)}</span>` : `<span class="nm">–</span>`}</td>
+    </tr>${open ? `<tr class="detail"><td colspan="${COLS.length}">${detail(r)}</td></tr>` : ""}`;
+  }).join("") || `<tr><td colspan="${COLS.length}" style="text-align:center;color:var(--muted);padding:30px">Keine Aktien für diese Filter.</td></tr>`;
+
+  $("#tbody").querySelectorAll("tr.main").forEach(tr => tr.onclick = () => {
+    const t = tr.dataset.t; S.open.has(t) ? S.open.delete(t) : S.open.add(t); render();
+  });
+  $("#tbody").querySelectorAll(".spark").forEach(bindSpark);
+}
+
+function detail(r) {
+  const H_ = h(r);
+  const levRows = DATA.leverages.map(L => {
+    const l = H_.lev[L].long, s = H_.lev[L].short;
+    return `<tr><td style="text-align:left">${L}x</td><td>${pct(l.ko)}</td><td>${pct(l.win)}</td><td class="${cls(l.ev)}">${pct(l.ev, 1, true)}</td>
+      <td>${pct(s.ko)}</td><td>${pct(s.win)}</td><td class="${cls(s.ev)}">${pct(s.ev, 1, true)}</td></tr>`;
+  }).join("");
+  const news = r.news.length ? r.news.map(n => `<a href="${esc(n.url || "#")}" target="_blank" rel="noopener noreferrer">${esc(n.title)}<small>${esc(n.source || "")} ${n.date ? "· " + fmtDate(n.date) : ""}</small></a>`).join("") : `<span class="nm">Keine aktuellen Meldungen gefunden.</span>`;
+  return `<div class="det">
+    <div class="card"><h4>Kurs letzte 90 Handelstage</h4>
+      <div class="spark" data-t="${esc(r.ticker)}"><svg></svg><div class="tip"></div></div>
+      <h4 style="margin-top:12px">Heutiges Setup</h4>
+      <div style="font-size:13px">${esc(r.setup)}</div>
+      <div class="nm" style="margin-top:4px">Abgeglichen über: ${esc(r.matched)} · ${r.n.toLocaleString("de-DE")} Fälle</div>
+    </div>
+    <div class="card"><h4>Kennzahlen · ${S.H} Tage</h4>
+      <div class="kv">
+        <span>P(steigt) im Setup</span><span>${pct(H_.p_up, 1)}</span>
+        <span>P(steigt) Basisrate</span><span>${pct(b(r).p_up, 1)}</span>
+        <span>P(steigt) nur diese Aktie</span><span>${pct(H_.own_p_up, 1)}</span>
+        <span>Typische Spanne (10–90 %)</span><span>${pct(H_.q10, 1, true)} … ${pct(H_.q90, 1, true)}</span>
+        <span>Median-Bewegung</span><span class="${cls(H_.median)}">${pct(H_.median, 1, true)}</span>
+        <span>Tagesschwankung (σ 20T)</span><span>${pct(r.sigma, 1)}</span>
+        <span>20-Tage-Performance</span><span class="${cls(r.chg20d)}">${pct(r.chg20d, 1, true)}</span>
+        <span>Über 200-Tage-Linie</span><span>${r.above200 == null ? "–" : r.above200 ? "ja" : "nein"}</span>
+        <span>Volumen vs. Ø 20T</span><span>${r.volratio ? num(r.volratio, 1) + "×" : "–"}</span>
+        <span>Nächste Zahlen</span><span>${r.earnings ? fmtDate(r.earnings) : "–"}</span>
+      </div>
+      <h4 style="margin-top:14px">Alle Hebel · ${S.H} Tage</h4>
+      <table class="levt"><thead><tr><th style="text-align:left"></th><th colspan="3" style="text-align:center">Long</th><th colspan="3" style="text-align:center">Short</th></tr>
+      <tr><th style="text-align:left">Hebel</th><th>KO</th><th>Gewinn</th><th>Ø</th><th>KO</th><th>Gewinn</th><th>Ø</th></tr></thead><tbody>${levRows}</tbody></table>
+    </div>
+    <div class="card news"><h4>Nachrichten (Yahoo Finance)</h4>${news}</div>
+  </div>`;
+}
+
+function bindSpark(el) {
+  const r = DATA.rows.find(x => x.ticker === el.dataset.t);
+  const svg = el.querySelector("svg"), tip = el.querySelector(".tip");
+  const W = el.clientWidth || 400, Hh = 120, pad = 6, v = r.spark;
+  const mn = Math.min(...v), mx = Math.max(...v);
+  const X = i => pad + i / (v.length - 1) * (W - 2 * pad), Y = y => Hh - pad - (y - mn) / (mx - mn || 1) * (Hh - 2 * pad);
+  const col = v[v.length - 1] >= v[0] ? "var(--up)" : "var(--down)";
+  svg.setAttribute("viewBox", `0 0 ${W} ${Hh}`);
+  svg.innerHTML = `<line x1="${pad}" x2="${W - pad}" y1="${Y(v[0])}" y2="${Y(v[0])}" stroke="var(--line)" stroke-dasharray="3 3"/>
+    <polyline points="${v.map((y, i) => `${X(i)},${Y(y)}`).join(" ")}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>
+    <line class="cx" y1="${pad}" y2="${Hh - pad}" stroke="var(--muted)" stroke-width="1" style="display:none"/>
+    <circle class="dot" r="4" fill="${col}" stroke="var(--surface)" stroke-width="2" style="display:none"/>`;
+  const cx = svg.querySelector(".cx"), dot = svg.querySelector(".dot");
+  svg.onmousemove = e => {
+    const rc = svg.getBoundingClientRect(), x = (e.clientX - rc.left) / rc.width * W;
+    const i = Math.max(0, Math.min(v.length - 1, Math.round((x - pad) / (W - 2 * pad) * (v.length - 1))));
+    cx.setAttribute("x1", X(i)); cx.setAttribute("x2", X(i)); cx.style.display = dot.style.display = "";
+    dot.setAttribute("cx", X(i)); dot.setAttribute("cy", Y(v[i]));
+    tip.style.display = "block"; tip.style.left = (X(i) / W * rc.width) + "px"; tip.style.top = (Y(v[i]) / Hh * rc.height) + "px";
+    tip.textContent = `${fmtDate(r.spark_dates[i])}: ${num(v[i])} ${r.currency}`;
+  };
+  svg.onmouseleave = () => { cx.style.display = dot.style.display = "none"; tip.style.display = "none"; };
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+.venv/
+scanner.log
+.DS_Store
+.tools/
