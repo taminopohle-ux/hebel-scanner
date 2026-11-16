@@ -95,6 +95,34 @@ tr.detail td{padding:0;text-align:left;white-space:normal;background:var(--surfa
 .method li{margin-bottom:5px}
 .method b{color:var(--text);font-weight:600}
 @media (max-width:860px){.det{grid-template-columns:1fr}}
+/* Einfache Ansicht */
+.simple h2{font-size:18px;margin:4px 0 2px}
+.simple .head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;margin:18px 0 10px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.card2{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card2.sell{border-color:var(--down);box-shadow:0 0 0 1px var(--down) inset}
+.badge{align-self:flex-start;font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px}
+.badge.long{background:var(--up-soft);color:var(--up)}
+.badge.short{background:var(--down-soft);color:var(--down)}
+.badge.sell{background:var(--down);color:#fff}
+.badge.hold{background:var(--surface-2);color:var(--text-2)}
+.card2 .nm2{font-size:20px;font-weight:700;line-height:1.2}
+.card2 .nm2 small{font-size:12px;font-weight:400;color:var(--muted);margin-left:6px}
+.card2 .why{font-size:14px;color:var(--text)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.facts span:nth-child(odd){color:var(--text-2)}
+.facts span:nth-child(even){text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.risk-low{color:var(--up)} .risk-mid{color:var(--warn)} .risk-high{color:var(--down)}
+.btn{font:inherit;font-size:14px;font-weight:600;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;background:var(--text);color:var(--surface)}
+.btn.ghost{background:var(--surface-2);color:var(--text)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--text-2)}
+.empty b{display:block;color:var(--text);font-size:16px;margin-bottom:4px}
+.stale{background:var(--down-soft);color:var(--down);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-weight:600}
+details.small{margin-top:14px;font-size:13px;color:var(--text-2)}
+details.small summary{cursor:pointer;color:var(--text)}
+.waitlist{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+@media (max-width:600px){.tiles{grid-template-columns:1fr 1fr}.tile svg{display:none}.tile .val{font-size:16px}}
+.toggle{display:block;margin:28px auto 14px;background:transparent;border:1px solid var(--line);color:var(--text-2);font:inherit;font-size:13px;padding:8px 16px;border-radius:999px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -107,10 +135,42 @@ tr.detail td{padding:0;text-align:left;white-space:normal;background:var(--surfa
     <div class="sub">Für Knock-outs/Turbos (z.&nbsp;B. über Scalable Capital / gettex)</div>
   </header>
 
-  <div class="disclaimer"><b>Keine Empfehlung.</b> Die Werte zeigen, wie sich Aktien in der Vergangenheit nach <i>ähnlichen</i> Situationen entwickelt haben. Das ist keine Prognose. Gebühren, Spreads und Finanzierungskosten der Hebelprodukte sind nicht enthalten. Bei Hebelprodukten ist ein Totalverlust in wenigen Stunden möglich.</div>
+  <div class="disclaimer"><b>Keine Anlageberatung.</b> Die Signale folgen festen Regeln aus historischen Daten, nicht deiner persönlichen Situation. Sie sind keine Prognose. Bei Hebelprodukten ist ein Totalverlust in wenigen Stunden möglich. Setze nur Geld ein, das du komplett verlieren kannst.</div>
 
   <div class="tiles" id="tiles"></div>
 
+  <section class="simple">
+    <div class="stale" id="stale" hidden></div>
+
+    <div id="tradesBox" hidden>
+      <div class="head"><div><h2>Meine Trades</h2><div class="sub">Gespeichert nur in diesem Browser · Stand: letzter Schlusskurs</div></div></div>
+      <div class="cards" id="trades"></div>
+    </div>
+
+    <div class="head">
+      <div><h2>Signale heute</h2><div class="sub" id="sigSub"></div></div>
+      <div class="ctl"><span>Hebel</span><div class="seg" id="segL2"></div></div>
+    </div>
+    <div id="signals"></div>
+
+    <details class="small">
+      <summary>Wann gibt es ein Signal?</summary>
+      <p>Ein <b>Kauf-Signal</b> erscheint nur, wenn alles zutrifft:</p>
+      <ul>
+        <li>In ähnlichen Situationen ging es historisch mindestens 5 Prozentpunkte öfter in eine Richtung als normal,</li>
+        <li>dafür gibt es mindestens 300 Vergleichsfälle,</li>
+        <li>in den nächsten Tagen stehen keine Quartalszahlen an,</li>
+        <li>das Knock-out-Risiko beim gewählten Hebel liegt unter 10&nbsp;%.</li>
+      </ul>
+      <p>Ein <b>Verkaufs-Signal</b> für deine gespeicherten Trades erscheint, wenn die Haltedauer (3 Handelstage) vorbei ist, das Signal in die Gegenrichtung dreht, Quartalszahlen vor dem Ausstieg anstehen oder der Trade mit Hebel etwa 50&nbsp;% im Minus liegt.</p>
+      <p>Meistens gibt es <b>kein</b> Signal. Das ist Absicht: Die Regeln sind streng, weil die Vorteile historisch klein sind. Auch ein Signal ist keine Garantie, ungefähr jeder dritte Fall ging trotzdem schief.</p>
+      <div id="waitlist"></div>
+    </details>
+  </section>
+
+  <button class="toggle" id="toggleDetails">Alle Details anzeigen ▾</button>
+
+  <div id="details" hidden>
   <div class="controls">
     <div class="ctl"><span>Haltedauer</span><div class="seg" id="segH"></div></div>
     <div class="ctl"><span>Hebel</span><div class="seg" id="segL"></div></div>
@@ -139,6 +199,7 @@ tr.detail td{padding:0;text-align:left;white-space:normal;background:var(--surfa
       <li><b>Zahlen-Termin im Zeitraum:</b> Quartalszahlen erzeugen Kurssprünge, die in den Basisraten kaum stecken. Das Risiko ist dann deutlich höher als angezeigt.</li>
       <li>Datenquelle: Yahoo Finance (Schlusskurse, verzögert). Die Seite wird werktags automatisch neu erzeugt.</li>
     </ul>
+  </div>
   </div>
 </div>
 
@@ -321,6 +382,114 @@ function bindSpark(el) {
 }
 
 render();
+
+/* ---------- Einfache Ansicht: Signale + Meine Trades ---------- */
+const RULES = { edge: 0.05, minN: 300, maxKO: 0.10, sellLoss: 0.5 };
+const SH = String(DATA.horizons[0]);           // Haltedauer der einfachen Ansicht (3 Tage)
+const S2 = { L: String(DATA.leverages[1] ?? DATA.leverages[0]) };
+const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const todayIso = () => iso(new Date());
+function addTradingDays(ds, n) { const d = new Date(ds + "T12:00:00"); while (n > 0) { d.setDate(d.getDate() + 1); if (d.getDay() % 6) n--; } return iso(d); }
+function niceDate(ds) { const d = new Date(ds + "T12:00:00"); return `${WD[d.getDay()]}, ${fmtDate(ds)}`; }
+
+function signalOf(r, L = S2.L) {
+  const H = r.h[SH], base = r.base[SH].p_up, edge = H.p_up - base, dE = daysUntil(r.earnings);
+  const earnSoon = dE != null && dE >= 0 && dE <= +SH + 2;
+  const dir = edge >= RULES.edge ? "long" : edge <= -RULES.edge ? "short" : null;
+  let reason = null;
+  if (!dir) reason = "kein klarer Vorteil";
+  else if (r.n < RULES.minN) reason = "zu wenige Vergleichsfälle";
+  else if (earnSoon) reason = `Zahlen am ${fmtDate(r.earnings)}`;
+  else if (H.lev[L][dir].ko > RULES.maxKO) reason = `KO-Risiko bei ${L}x zu hoch`;
+  return { dir: reason ? null : dir, rawDir: dir, reason, edge, H, hit: dir === "short" ? 1 - H.p_up : H.p_up };
+}
+function riskOf(ko) { return ko < 0.03 ? ["niedrig", "risk-low"] : ko < 0.10 ? ["mittel", "risk-mid"] : ["hoch", "risk-high"]; }
+
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem("hs_trades") || "[]"); } catch { return []; } },
+  set(v) { try { localStorage.setItem("hs_trades", JSON.stringify(v)); } catch {} },
+};
+
+function renderSimple() {
+  const age = Math.round((new Date(todayIso()) - new Date(DATA.data_date)) / 864e5);
+  const st = $("#stale");
+  st.hidden = age <= 3;
+  st.textContent = `Achtung: Die Daten sind vom ${fmtDate(DATA.data_date)}, also ${age} Tage alt. Die automatische Aktualisierung hat wohl nicht geklappt. Signale nicht verwenden.`;
+
+  // Hebel-Auswahl
+  $("#segL2").innerHTML = DATA.leverages.map(v => `<button data-v="${v}" class="${String(v) === S2.L ? "on" : ""}">${v}x</button>`).join("");
+  $("#segL2").querySelectorAll("button").forEach(b => b.onclick = () => { S2.L = b.dataset.v; renderSimple(); });
+
+  const exitDate = addTradingDays(DATA.data_date, +SH);
+  $("#sigSub").textContent = `Für ${SH} Handelstage · Kurse vom ${fmtDate(DATA.data_date)}`;
+
+  // Signale
+  const trades = store.get();
+  const sigs = DATA.rows.map(r => ({ r, s: signalOf(r) })).filter(x => x.s.dir).sort((a, b) => Math.abs(b.s.edge) - Math.abs(a.s.edge));
+  $("#signals").innerHTML = sigs.length ? `<div class="cards">${sigs.map(({ r, s }) => {
+    const lv = s.H.lev[S2.L][s.dir], [rk, rc] = riskOf(lv.ko);
+    const has = trades.some(t => t.t === r.ticker);
+    return `<div class="card2">
+      <span class="badge ${s.dir}">${s.dir === "long" ? "▲ Kauf-Signal · Long (Call)" : "▼ Kauf-Signal · Short (Put)"}</span>
+      <div class="nm2">${esc(r.name)}<small>${esc(r.ticker)}</small></div>
+      <div class="why">In <b>${Math.round(s.hit * 100)} von 100</b> ähnlichen Fällen ging der Kurs in ${SH} Tagen ${s.dir === "long" ? "nach oben" : "nach unten"}.</div>
+      <div class="facts">
+        <span>Kurs jetzt</span><span>${num(r.price)} ${r.currency}</span>
+        <span>Risiko (${S2.L}x)</span><span class="${rc}">${rk} · ${pct(lv.ko)} KO</span>
+        <span>Verkaufen spätestens</span><span>${niceDate(exitDate)}</span>
+      </div>
+      ${has ? `<button class="btn ghost" disabled>✓ In „Meine Trades“</button>` : `<button class="btn" data-buy="${esc(r.ticker)}" data-dir="${s.dir}">Ich habe gekauft</button>`}
+    </div>`;
+  }).join("")}</div>` : `<div class="empty"><b>Heute kein Signal. Abwarten.</b>Keine Aktie erfüllt gerade alle Regeln. An solchen Tagen nichts zu tun, ist meist die bessere Wahl.</div>`;
+
+  $("#signals").querySelectorAll("[data-buy]").forEach(b => b.onclick = () => {
+    const r = DATA.rows.find(x => x.ticker === b.dataset.buy);
+    const list = store.get();
+    list.push({ t: r.ticker, dir: b.dataset.dir, L: +S2.L, date: DATA.data_date, price: r.price, exit: exitDate });
+    store.set(list); renderSimple();
+  });
+
+  // Warteliste
+  const waits = DATA.rows.map(r => ({ r, s: signalOf(r) })).filter(x => !x.s.dir && x.s.rawDir);
+  $("#waitlist").innerHTML = waits.length ? `<p style="margin-top:12px"><b>Fast ein Signal, aber nicht ganz:</b></p><div class="waitlist">${waits.map(({ r, s }) =>
+    `<span class="pill">${esc(r.name)}: ${s.rawDir === "long" ? "▲" : "▼"} ${esc(s.reason)}</span>`).join("")}</div>` : "";
+
+  // Meine Trades
+  $("#tradesBox").hidden = !trades.length;
+  $("#trades").innerHTML = trades.map((t, i) => {
+    const r = DATA.rows.find(x => x.ticker === t.t);
+    if (!r) return "";
+    const move = r.price / t.price - 1, levRes = Math.max(-1, (t.dir === "long" ? move : -move) * t.L);
+    const s = signalOf(r, String(t.L)), dE = daysUntil(r.earnings);
+    let why = null;
+    if (todayIso() >= t.exit) why = "Haltedauer ist vorbei.";
+    else if (s.rawDir && s.rawDir !== t.dir && Math.abs(s.edge) >= RULES.edge) why = "Das Signal hat in die Gegenrichtung gedreht.";
+    else if (r.earnings && r.earnings <= t.exit && dE >= 0) why = `Quartalszahlen am ${fmtDate(r.earnings)}, vor deinem Ausstieg.`;
+    else if (levRes <= -RULES.sellLoss) why = "Mit Hebel etwa 50 % im Minus, Verlust begrenzen.";
+    return `<div class="card2${why ? " sell" : ""}">
+      <span class="badge ${why ? "sell" : "hold"}">${why ? "🔔 Jetzt verkaufen" : `Halten bis ${niceDate(t.exit)}`}</span>
+      <div class="nm2">${esc(r.name)}<small>${t.dir === "long" ? "Long" : "Short"} · ${t.L}x</small></div>
+      ${why ? `<div class="why">${esc(why)}</div>` : ""}
+      <div class="facts">
+        <span>Gekauft am</span><span>${fmtDate(t.date)} bei ${num(t.price)}</span>
+        <span>Kurs jetzt</span><span>${num(r.price)} ${r.currency}</span>
+        <span>Ergebnis ca. (mit ${t.L}x)</span><span class="${cls(levRes)}">${pct(levRes, 0, true)}</span>
+      </div>
+      <button class="btn ghost" data-sold="${i}">Verkauft – entfernen</button>
+    </div>`;
+  }).join("");
+  $("#trades").querySelectorAll("[data-sold]").forEach(b => b.onclick = () => {
+    const list = store.get(); list.splice(+b.dataset.sold, 1); store.set(list); renderSimple();
+  });
+}
+
+$("#toggleDetails").onclick = () => {
+  const d = $("#details"); d.hidden = !d.hidden;
+  $("#toggleDetails").textContent = d.hidden ? "Alle Details anzeigen ▾" : "Details ausblenden ▴";
+  if (!d.hidden) render();
+};
+renderSimple();
 </script>
 </body>
 </html>
